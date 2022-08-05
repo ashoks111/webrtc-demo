@@ -55,6 +55,12 @@ function App() {
         audio: true,
         video: true,
       });
+      // const videoDevices = await getConnectedDevices("videoinput");
+      // const audioInputDevices = await getConnectedDevices("audioinput");
+      // const speakers = await getConnectedDevices("audiooutput");
+      // console.log("Cameras devices:", videoDevices);
+      // console.log("Audio Devices:", audioInputDevices);
+      // console.log("Speakers:", speakers);
 
       participant.stream = stream;
       createPeerConncetion(participant);
@@ -67,8 +73,15 @@ function App() {
     }
   };
 
+  const getConnectedDevices = async (type) => {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    return devices.filter((device) => device.kind === type);
+  };
+
+  // Listen for changes to media devices and update the list accordingly
+  navigator.mediaDevices.addEventListener("devicechange", (event) => {});
+
   const createPeerConncetion = (participant) => {
-    console.log("createPeerConncetion", participant);
     const configurations = {
       iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
     };
@@ -83,6 +96,9 @@ function App() {
   const listenPeerConnctionEvent = (participant) => {
     const peerConnection = participant.peerConnection;
     if (!peerConnection) return;
+    /**
+     * new, connecting, connected, disconnected, failed, or closed.
+     */
     peerConnection.addEventListener("connectionstatechange", () => {
       console.log(
         `peer connection  state  changed in : ${peerConnection.connectionState}`
@@ -91,11 +107,13 @@ function App() {
     peerConnection.addEventListener("negotiationneeded", () => {
       console.log("peer connection  negotiation is needed");
     });
-    peerConnection.addEventListener("icegatheringstatechange", () => {
-      console.log("peer connection  icegatheringstatechange");
-    });
+
+    /**
+     * An icecandidate event is sent to an RTCPeerConnection when an RTCIceCandidate has been identified
+     * and added to the local peer by a call to RTCPeerConnection.setLocalDescription()
+     */
     peerConnection.addEventListener("icecandidate", (event) => {
-      console.log("peer connection icecandidate");
+      console.log("peer connection icecandidate", event.candidate);
       handleIceCandidate(event.candidate);
     });
     peerConnection.addEventListener("iceconnectionstatechange", () => {
@@ -204,7 +222,7 @@ function App() {
         ) : (
           <div className="videosection">
             <video id="publisher" autoPlay muted />
-            <video id="subscriber" autoPlay />
+            <video id="subscriber" autoPlay muted />
           </div>
         )}
       </div>
